@@ -150,6 +150,7 @@ function createResolvedInstructionsDefinition(
 function createResolvedAgentConfig(manifest: CompiledAgentNodeManifest): ResolvedAgent["config"] {
   const config: {
     compaction?: ResolvedAgent["config"]["compaction"];
+    dynamicModel?: ResolvedAgent["config"]["dynamicModel"];
     experimental?: ResolvedAgent["config"]["experimental"];
     model: ResolvedAgent["config"]["model"];
     name: string;
@@ -211,6 +212,13 @@ function createResolvedAgentConfig(manifest: CompiledAgentNodeManifest): Resolve
     }
 
     config.compaction = compaction;
+  }
+
+  if (manifest.config.dynamicModel !== undefined) {
+    config.dynamicModel = {
+      ...createResolvedModuleSourceRef(manifest.config.dynamicModel),
+      eventNames: [...manifest.config.dynamicModel.eventNames],
+    };
   }
 
   if (manifest.config.experimental !== undefined) {
