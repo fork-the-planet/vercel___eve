@@ -27,6 +27,7 @@ import type {
   NitroArtifactsConfig,
 } from "#internal/nitro/routes/runtime-artifacts.js";
 import { deriveEveWorkflowQueuePrefix } from "#internal/workflow/queue-namespace.js";
+import { usesParentDevelopmentWorkflowWorld } from "#internal/workflow/development-world-protocol.js";
 import {
   computeChannelRouteRegistrations,
   registerChannelVirtualHandlers,
@@ -395,14 +396,21 @@ export async function configureDevelopmentNitroRoutes(
 
   const artifactsConfig = createDevelopmentNitroArtifactsConfig({
     appRoot: preparedHost.appRoot,
+    configuredWorld: preparedHost.compileResult.manifest.config.experimental?.workflow?.world,
   });
   registerApplicationRoutes(nitro, preparedHost, artifactsConfig);
   registerDevelopmentControlRoutes(nitro, artifactsConfig);
 
   const workflowBundlePath = join(workflowBuildDirectory, "workflows.mjs");
-  await registerWorkflowRoute(nitro, preparedHost, workflowBundlePath, [
-    createWorkflowDirectHandlerEntry(preparedHost, workflowBundlePath),
-  ]);
+  const directHandlers: WorkflowDirectHandlerEntry[] = [];
+  if (
+    !usesParentDevelopmentWorkflowWorld(
+      preparedHost.compileResult.manifest.config.experimental?.workflow?.world,
+    )
+  ) {
+    directHandlers.push(createWorkflowDirectHandlerEntry(preparedHost, workflowBundlePath));
+  }
+  await registerWorkflowRoute(nitro, preparedHost, workflowBundlePath, directHandlers);
   nitro.routing.sync();
 }
 

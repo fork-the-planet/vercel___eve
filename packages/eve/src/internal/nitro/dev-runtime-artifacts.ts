@@ -10,6 +10,7 @@ import { renameWithTransientBusyRetry } from "#shared/rename-with-retry.js";
 
 const DEV_RUNTIME_ARTIFACTS_DIRECTORY = "dev-runtime";
 const DEV_RUNTIME_ARTIFACTS_ACTIVATED_MARKER = "activated";
+const DEV_RUNTIME_ARTIFACTS_GENERATION_METADATA = "generation.json";
 const DEV_RUNTIME_ARTIFACTS_POINTER_VERSION = 2;
 const DEV_RUNTIME_SNAPSHOT_RECENT_WINDOW_MS = 15 * 60 * 1000;
 const DEV_RUNTIME_SNAPSHOT_RETAIN_COUNT = 5;
@@ -106,6 +107,10 @@ export async function stageDevelopmentRuntimeArtifactsSnapshot(
       ),
       runtimeAppRoot: sourceSnapshotPlan.runtimeAppRoot,
     });
+    await writeFile(
+      join(snapshotRoot, DEV_RUNTIME_ARTIFACTS_GENERATION_METADATA),
+      `${JSON.stringify({ runtimeAppRoot: sourceSnapshotPlan.runtimeAppRoot })}\n`,
+    );
   } catch (error) {
     await rm(snapshotRoot, { force: true, recursive: true }).catch(() => {});
     throw error;

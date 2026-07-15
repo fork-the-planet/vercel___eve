@@ -160,7 +160,6 @@ describe("transactional authored rebuild coordinator", () => {
       appRoot: retryHost.appRoot,
       generation: retryHost.generation,
     });
-
     await devServer.close();
   });
 
@@ -194,7 +193,6 @@ describe("transactional authored rebuild coordinator", () => {
     expect(mocks.activateDevelopmentGeneration).not.toHaveBeenCalled();
     expect(mocks.environmentRollback).toHaveBeenCalledOnce();
     expect(mocks.environmentCommit).not.toHaveBeenCalled();
-
     await devServer.close();
   });
 });

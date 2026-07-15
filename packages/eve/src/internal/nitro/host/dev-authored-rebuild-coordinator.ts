@@ -54,6 +54,16 @@ export async function createDevelopmentAuthoredRebuildCoordinator(input: {
   });
 }
 
+/**
+ * Serializes authored rebuilds into a transaction whose commit order makes
+ * rollback unnecessary: a candidate generation and worker are prepared while
+ * the previous worker keeps serving, the ready worker is swapped in first,
+ * and the generation pointer is activated second. Workers are
+ * generation-neutral (they load authored modules through the pointer), so
+ * every intermediate state serves consistent code, and any failure before
+ * the swap simply discards the candidate. Failures after the swap must
+ * never travel the discard path — see {@link PostCommitDevelopmentRebuildError}.
+ */
 class TransactionalDevelopmentAuthoredRebuildCoordinator implements DevelopmentAuthoredRebuildCoordinator {
   #currentHost: PreparedDevelopmentApplicationHost;
   #currentHostFingerprint: string;
@@ -225,7 +235,10 @@ function startSandboxPrewarmAfterCommit(
   if (!hasSandboxRelatedChange(host.compileResult.project.agentRoot, changedPaths)) {
     return;
   }
-  const artifactsConfig = createDevelopmentNitroArtifactsConfig({ appRoot: host.appRoot });
+  const artifactsConfig = createDevelopmentNitroArtifactsConfig({
+    appRoot: host.appRoot,
+    configuredWorld: host.compileResult.manifest.config.experimental?.workflow?.world,
+  });
   startDevelopmentSandboxPrewarmInBackground({
     appRoot: host.appRoot,
     compiledArtifactsSource: resolveNitroCompiledArtifactsSource(artifactsConfig),
